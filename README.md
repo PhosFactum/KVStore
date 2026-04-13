@@ -25,8 +25,10 @@
 1. Run program
 2. Write in CLI commands like
 ``` bash
-> SET key
+> SET key value
 > GET key
-> STATS
 > DELETE key
+> STATS
+> HELP
+> EXIT
 ```
