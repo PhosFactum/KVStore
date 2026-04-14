@@ -3,6 +3,7 @@ package store
 
 import (
 	"sync"
+	"sync/atomic"
 	"time"
 
 	m "github.com/PhosFactum/KVStore/internal/models"
@@ -12,6 +13,9 @@ import (
 type Storage[K comparable, V any] struct {
 	mtx  sync.RWMutex
 	data map[K]*m.Item[V]
+
+	hits   atomic.Int64
+	misses atomic.Int64
 }
 
 // NewStorage: constructor for new storage creation
@@ -36,16 +40,19 @@ func (s *Storage[K, V]) GET(key K) (V, bool) {
 
 	item, ok := s.data[key]
 	if !ok {
+		s.misses.Add(1)
 		var zero V
 		return zero, false
 	}
 
 	// Check if item expired
 	if !item.Expiration.IsZero() && time.Now().After(item.Expiration) {
+		s.misses.Add(1)
 		var zero V
 		return zero, false
 	}
 
+	s.hits.Add(1)
 	return item.Value, true
 }
 
@@ -60,4 +67,17 @@ func (s *Storage[K, V]) DELETE(key K) bool {
 	}
 
 	return exists
+}
+
+// STATS: method for get STATS of storage
+func (s *Storage[K, V]) STATS() m.Stats {
+	s.mtx.RLock()
+	keyCount := len(s.data)
+	s.mtx.RUnlock()
+
+	return m.Stats{
+		Hits:   s.hits.Load(),
+		Misses: s.misses.Load(),
+		Keys:   keyCount,
+	}
 }

@@ -71,9 +71,17 @@ func CallDELETE(args []string) string {
 	return "Key not found"
 }
 
-// callSTATS: STATS method handler
-func CallSTATS() {
-	fmt.Println("Here is a logic of STATS method!")
+// CallSTATS: STATS method handler
+func CallSTATS(args []string) string {
+	stats := globalStore.STATS()
+
+	return fmt.Sprintf(
+		"Hits: %d, Misses: %d, Keys: %d, HitRate: %.2f%%",
+		stats.Hits,
+		stats.Misses,
+		stats.Keys,
+		stats.HitRate(),
+	)
 }
 
 // GetStore: getter for main.go to storage from outer

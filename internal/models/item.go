@@ -1,5 +1,5 @@
 // Structure of item
-package store
+package models
 
 import "time"
 

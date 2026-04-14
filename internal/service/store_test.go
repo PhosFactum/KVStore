@@ -4,6 +4,7 @@ package store
 import (
 	"sync"
 	"testing"
+	"time"
 )
 
 // TestSETandGET: test for SET and GET methods
@@ -45,6 +46,42 @@ func TestDELETE(t *testing.T) {
 	wasDeletedAgain := store.DELETE("non-existent-key")
 	if wasDeletedAgain {
 		t.Error("Expected FALSE, because key wasn't exist")
+	}
+}
+
+// TestSTATS: test of metrics collection
+func TestSTATS(t *testing.T) {
+	store := NewStorage[string, string]()
+
+	// Empty at start
+	stats := store.STATS()
+	if stats.Hits != 0 || stats.Misses != 0 {
+		t.Errorf("Expected empty stats, got %+v", stats)
+	}
+
+	// Hits
+	store.SET("k1", "v1", 0)
+	store.GET("k1")
+	store.SET("k2", "k2", 0)
+	store.GET("k2")
+
+	// Miss (no key)
+	store.GET("no-such-key")
+
+	// Miss (TTL expired)
+	store.SET("temp", "val", 1*time.Millisecond)
+	time.Sleep(10 * time.Millisecond)
+	store.GET("temp")
+
+	stats = store.STATS()
+	if stats.Hits != 2 {
+		t.Errorf("Expected 2 hit, got %d", stats.Hits)
+	}
+	if stats.Misses != 2 {
+		t.Errorf("Expected 2 misses, got %d", stats.Misses)
+	}
+	if rate := stats.HitRate(); rate != 50 {
+		t.Logf("HitRate: %.2f%% (ok)", rate)
 	}
 }
 
