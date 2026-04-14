@@ -1,9 +1,11 @@
 // Operations for menu-points processing
-package handlers
+package ui
 
 import (
 	"fmt"
+	"strings"
 
+	h "github.com/PhosFactum/KVStore/internal/handlers"
 	"github.com/PhosFactum/KVStore/pkg/input"
 )
 
@@ -15,26 +17,34 @@ func ShowMenu() {
 	ShowHelp()
 
 	for {
-		input, err := input.GetString()
+		line, err := input.GetString()
 		if err != nil {
-			fmt.Println("error while writing command")
+			fmt.Println("error while reading command")
 			continue
 		}
 
-		switch input {
-		case "EXIT", "exit", "Exit":
+		parts := strings.Fields(line)
+		if len(parts) == 0 {
+			continue
+		}
+
+		cmd := strings.ToUpper(parts[0])
+		args := parts[1:]
+
+		switch cmd {
+		case "EXIT":
 			fmt.Println("\n--- Program was terminated! ---")
 			return
-		case "HELP", "help", "Help":
+		case "HELP":
 			ShowHelp()
 		case "SET":
-			callSET()
+			fmt.Println(h.CallSET(args))
 		case "GET":
-			callGET()
+			fmt.Println(h.CallGET(args))
 		case "DELETE":
-			callDELETE()
+			fmt.Println(h.CallDELETE(args))
 		case "STATS":
-			callSTATS()
+			fmt.Println("Not implemented yet!")
 		default:
 			fmt.Println("Undefined method, try again!")
 			fmt.Println("Type 'HELP' to see all comands")

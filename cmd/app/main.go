@@ -2,10 +2,10 @@
 package main
 
 import (
-	"github.com/PhosFactum/KVStore/internal/handlers"
+	"github.com/PhosFactum/KVStore/internal/ui"
 )
 
 // main: entrypoint of program
 func main() {
-	handlers.ShowMenu()
+	ui.ShowMenu()
 }

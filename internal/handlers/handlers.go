@@ -1,24 +1,82 @@
 // Handlers for menu-points
 package handlers
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
+	svc "github.com/PhosFactum/KVStore/internal/service"
+)
+
+// I know, that this is bad for prod, but it's CLI-app (better use DI)
+var globalStore = svc.NewStorage[string, string]()
 
 // callSET: SET method handler
-func callSET() {
-	fmt.Println("Here is a logic of SET method!")
+func CallSET(args []string) string {
+	if len(args) < 2 {
+		return "Usage: SET key value [TTL seconds]"
+	}
+
+	key := args[0]
+	value := args[1]
+
+	var ttl time.Duration
+
+	if len(args) >= 4 && strings.ToUpper(args[2]) == "TTL" {
+		seconds, err := strconv.Atoi(args[3])
+		if err != nil {
+			return fmt.Sprintf("Invalid TTL value: %s", args[3])
+		}
+		if seconds < 0 {
+			return "TTL cannot be negative"
+		}
+		ttl = time.Duration(seconds) * time.Second
+	}
+
+	globalStore.SET(key, value, ttl)
+
+	return "OK"
 }
 
 // callGET: GET method handler
-func callGET() {
-	fmt.Println("Here is a logic of GET method!")
+func CallGET(args []string) string {
+	if len(args) < 1 {
+		return "Usage: GET key"
+	}
+
+	key := args[0]
+	value, found := globalStore.GET(key)
+
+	if !found {
+		return "(nil)"
+	}
+	return fmt.Sprintf("'%s'", value)
 }
 
 // callDELETE: DELETE method handler
-func callDELETE() {
-	fmt.Println("Here is a logic of DELETE method!")
+func CallDELETE(args []string) string {
+	if len(args) < 1 {
+		return "Usage: DELETE key"
+	}
+
+	key := args[0]
+	wasDeleted := globalStore.DELETE(key)
+
+	if wasDeleted {
+		return "OK"
+	}
+
+	return "Key not found"
 }
 
 // callSTATS: STATS method handler
-func callSTATS() {
+func CallSTATS() {
 	fmt.Println("Here is a logic of STATS method!")
+}
+
+// GetStore: getter for main.go to storage from outer
+func GetStore() *svc.Storage[string, string] {
+	return globalStore
 }
