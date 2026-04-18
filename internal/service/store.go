@@ -1,11 +1,12 @@
 // Public API (for Set, Get and Delete operations)
-package store
+package service
 
 import (
 	"sync"
 	"sync/atomic"
 	"time"
 
+	"github.com/PhosFactum/KVStore/internal/cleanup"
 	m "github.com/PhosFactum/KVStore/internal/models"
 )
 
@@ -14,8 +15,12 @@ type Storage[K comparable, V any] struct {
 	mtx  sync.RWMutex
 	data map[K]*m.Item[V]
 
+	// Statisтолько [одна фича]. Напиши структуру файлов и минимальный код для неё. Без объяснений. tics
 	hits   atomic.Int64
 	misses atomic.Int64
+
+	// Background cleaner
+	cleaner *cleanup.Cleaner
 }
 
 // NewStorage: constructor for new storage creation
@@ -79,5 +84,35 @@ func (s *Storage[K, V]) STATS() m.Stats {
 		Hits:   s.hits.Load(),
 		Misses: s.misses.Load(),
 		Keys:   keyCount,
+	}
+}
+
+// CleanupExpired: deleting expired elements
+func (s *Storage[K, V]) CleanupExpired() int {
+	s.mtx.Lock()
+	defer s.mtx.Unlock()
+
+	count := 0
+	now := time.Now()
+	for k, item := range s.data {
+		if !item.Expiration.IsZero() && now.After(item.Expiration) { // TTL checking
+			delete(s.data, k)
+			count++
+		}
+	}
+
+	return count
+}
+
+// StartCleaner: running automatic cleanup with interval
+func (s *Storage[K, V]) StartCleaner(interval time.Duration) {
+	s.cleaner = cleanup.NewCleaner(interval, s)
+	s.cleaner.Start()
+}
+
+// StopCleaner: gracefully shutdown the goroutine
+func (s *Storage[K, V]) StopCleaner() {
+	if s.cleaner != nil {
+		s.cleaner.Stop()
 	}
 }

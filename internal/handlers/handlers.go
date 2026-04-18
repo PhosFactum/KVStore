@@ -84,6 +84,11 @@ func CallSTATS(args []string) string {
 	)
 }
 
+// InitScore: DI-method for injection
+func InitStore(store *svc.Storage[string, string]) {
+	globalStore = store
+}
+
 // GetStore: getter for main.go to storage from outer
 func GetStore() *svc.Storage[string, string] {
 	return globalStore

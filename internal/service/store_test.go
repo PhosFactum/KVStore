@@ -1,5 +1,5 @@
 // Test of store.go
-package store
+package service
 
 import (
 	"sync"

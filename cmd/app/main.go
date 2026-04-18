@@ -1,11 +1,9 @@
 // Entrypoint of KVStore
 package main
 
-import (
-	"github.com/PhosFactum/KVStore/internal/ui"
-)
+import "github.com/PhosFactum/KVStore/internal/app"
 
 // main: entrypoint of program
 func main() {
-	ui.ShowMenu()
+	app.NewApp().Run()
 }

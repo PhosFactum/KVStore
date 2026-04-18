@@ -44,7 +44,7 @@ func ShowMenu() {
 		case "DELETE":
 			fmt.Println(h.CallDELETE(args))
 		case "STATS":
-			fmt.Println("Not implemented yet!")
+			fmt.Println(h.CallSTATS(args))
 		default:
 			fmt.Println("Undefined method, try again!")
 			fmt.Println("Type 'HELP' to see all comands")
