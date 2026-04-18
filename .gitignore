@@ -1,2 +1,4 @@
-*.out
+# Logs, profiles, binaries
+*.log
 *.prof
+kvstore
